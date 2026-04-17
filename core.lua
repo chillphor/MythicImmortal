@@ -1,4 +1,4 @@
--- MythicPlusTracker/core.lua --
+-- MythicImmortal/core.lua --
 
 -- ==================================
 -- 1. 本地化模块 (Localization)
