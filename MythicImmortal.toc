@@ -1,0 +1,17 @@
+## Interface: 120001
+
+## Title: MythicImmortal 
+## Title-zhCN: MythicImmortal 
+## Title-enUS: MythicImmortal 
+## Notes: 用于大米仙人追踪多个角色本周大秘境完成次数
+## Notes-zhCN: 用于大米仙人追踪多个角色本周大秘境完成次数
+## Notes-enUS: Tracks weekly Mythic+ dungeon runs for multiple characters.
+
+## Author: 尽是风流-影牙要塞
+## Version: 3.5
+## SavedVariables: MythicImmortalDB
+## DefaultState: enabled
+## X-Curse-Project-ID: [如果你在CurseForge创建了项目，填入ID]
+## X-Wago-ID: [如果你也同步到Wago，填入ID]
+
+core.lua
