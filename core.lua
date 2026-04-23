@@ -1,80 +1,7 @@
 -- MythicImmortal/core.lua
 -- 确保 addon 变量在使用前被正确定义
 
--- ==================================
--- 1. 本地化模块 (Localization)
--- ==================================
-local L = {}
-local currentLocale = GetLocale()
--- 默认语言 (简体中文 zhCN)
-L["INSTANCE_239"] = "执政团之座"
-L["INSTANCE_556"] = "萨隆矿坑"
-L["INSTANCE_161"] = "通天峰"
-L["INSTANCE_402"] = "艾杰斯亚学院"
-L["INSTANCE_557"] = "风行者之塔"
-L["INSTANCE_558"] = "魔导师平台"
-L["INSTANCE_560"] = "迈萨拉洞窟"
-L["INSTANCE_559"] = "节点希纳斯"
-L["NO_KEY"] = "你没有当前的大秘境钥匙！"
-L["NOT_IN_GROUP"] = "你不在小队或团队中，无法发送钥匙信息。"
-L["CURRENT_KEY"] = "当前钥匙"
-L["UNKNOWN_INSTANCE"] = "未知副本"
-L["TIME_COMPLETED"] = "限时"
-L["TIME_FAILED"] = "超时"
-L["DEBUG_TITLE"] = "=== MythicImmortal 调试报告 ==="
-L["DEBUG_API"] = "API 实时读取"
-L["DEBUG_DB"] = "数据库 旧值"
-L["DATA_UPDATED"] = "检测到变化！数据已更新。"
-L["DATA_SAME"] = "数据一致，无需更新。"
-L["DEBUG_DETAIL"] = "API 详细记录"
-L["NO_KEY_CURRENT"] = "当前没有钥匙"
-L["UI_TITLE"] = "本周大秘境统计"
-L["UI_BUTTON_VIEW"] = "查看"
-L["UI_BUTTON_SEND"] = "发送钥匙"
-L["UI_TOTAL_RUNS"] = "本周总低保次数"
-L["BUG_REPORT"] = "若发现Bug请联系|cff3FC7EB尽是风流"
-L["FILTER_TITLE"] = "角色筛选"
-L["SELECT_ALL"] = "全选"
-L["CLEAR_SELECTION"] = "清空"
-L["NO_SELECTED_CHARS"] = "没有选中任何角色"
-L["NO_DATA"] = "暂无数据"
-L["FILTER_BUTTON"] = "筛选"
-
--- 英语 (enUS)
-if currentLocale == "enUS" or currentLocale == "enGB" then
-L["INSTANCE_239"] = "Seat of the Triumvirate"
-L["INSTANCE_556"] = "Pit of Saron"
-L["INSTANCE_161"] = "Skyreach"
-L["INSTANCE_402"] = "Algeth'ar Academy"
-L["INSTANCE_557"] = "Windrunner Spire"
-L["INSTANCE_558"] = "Magister's Terrace"
-L["INSTANCE_560"] = "Maisara Caverns"
-L["INSTANCE_559"] = "Nexus-Point Xenas"
-L["NO_KEY"] = "You don't have a Mythic Keystone!"
-L["NOT_IN_GROUP"] = "You are not in a group or raid."
-L["CURRENT_KEY"] = "Current Keystone"
-L["UNKNOWN_INSTANCE"] = "Unknown Dungeon"
-L["TIME_COMPLETED"] = "Completed"
-L["TIME_FAILED"] = "Failed"
-L["DEBUG_TITLE"] = "=== MythicImmortal Debug Report ==="
-L["DEBUG_API"] = "API Read"
-L["DEBUG_DB"] = "Database Old Value"
-L["DATA_UPDATED"] = "Change detected! Data updated."
-L["DATA_SAME"] = "Data is consistent."
-L["DEBUG_DETAIL"] = "API Details"
-L["NO_KEY_CURRENT"] = "No current key"
-L["UI_TITLE"] = "Weekly M+ Stats"
-L["UI_BUTTON_VIEW"] = "View"
-L["UI_BUTTON_SEND"] = "Send Key"
-L["UI_TOTAL_RUNS"] = "Total Weekly Runs"
-L["BUG_REPORT"] = "Bug report to |cff3FC7EBJinshifengliu"
-L["FILTER_TITLE"] = "Character Filter"
-L["SELECT_ALL"] = "Select All"
-L["CLEAR_SELECTION"] = "Clear"
-L["NO_SELECTED_CHARS"] = "No characters selected"
-L["NO_DATA"] = "No data available"
-L["FILTER_BUTTON"] = "Filter"
-end
+local L = _G["MythicImmortal_L"]
 
 -- ==================================
 -- 2. 首先定义 addonName
@@ -88,6 +15,8 @@ local addon = {
     db = nil,
     displayFrame = nil,
     filterFrame = nil, -- 添加筛选框架
+    opacitySliderFrame = nil, -- 新增：透明度滑块框架
+    opacitySlider = nil,      -- 新增：透明度滑块
     activeFilters = {}, -- 存储当前筛选条件
     filterCheckboxes = {}, -- 存储筛选复选框的引用
     L = L -- 将本地化表挂载到 addon 上，方便内部函数访问
@@ -101,14 +30,14 @@ _G[addonName] = addon
 -- ==================================
 -- 保留你原来的硬编码作为默认值，但如果 L 表里有翻译，则使用 L 表的
 local MAP_ID_TO_NAME = {
-    [239] = L["INSTANCE_239"] or "Seat of the Triumvirate",
-    [556] = L["INSTANCE_556"] or "The MOTHERLODE!!",
-    [161] = L["INSTANCE_161"] or "Waycrest Manor",
-    [402] = L["INSTANCE_402"] or "Atal'Dazar",
-    [557] = L["INSTANCE_557"] or "The Underrot",
-    [558] = L["INSTANCE_558"] or "Tol Dagor",
-    [560] = L["INSTANCE_560"] or "Motherlode Mine",
-    [559] = L["INSTANCE_559"] or "Kings' Rest",
+    [239] = L["INSTANCE_239"] ,
+    [556] = L["INSTANCE_556"] ,
+    [161] = L["INSTANCE_161"] ,
+    [402] = L["INSTANCE_402"] ,
+    [557] = L["INSTANCE_557"] ,
+    [558] = L["INSTANCE_558"],
+    [560] = L["INSTANCE_560"] ,
+    [559] = L["INSTANCE_559"] ,
 }
 
 -- ==================================
@@ -120,6 +49,7 @@ local defaults = {
         showAll = true, -- 是否显示所有角色
         selectedChars = {}, -- 选定要显示的角色列表
     },
+    opacity = 0.95, -- 默认透明度
 }
 
 -- ==================================
@@ -135,6 +65,10 @@ function addon:InitializeDB()
         end
         if not MythicImmortalDB.filters then
             MythicImmortalDB.filters = defaults.filters
+        end
+        -- 确保透明度设置存在
+        if MythicImmortalDB.opacity == nil then
+            MythicImmortalDB.opacity = 0.95
         end
     end
     self.db = MythicImmortalDB
@@ -255,7 +189,7 @@ function addon:PrintDebugReport()
     
     -- 使用本地化字符串
     print("\n|cff00ff00" .. L["DEBUG_TITLE"] .. "|r")
-    print(string.format("角色: %s", fullName))
+    print(string.format(L["DEBUG_CHARACTER"].. ": %s", fullName))
     print(string.format(L["DEBUG_API"] .. ": |cffff0000%d|r", apiRuns))
     print(string.format(L["DEBUG_DB"] .. ": |cffff0000%d|r", savedRuns))
     
@@ -363,7 +297,112 @@ function addon:UpdateFilterCheckboxes()
 end
 
 -- ==================================
--- 18. 创建筛选框架
+-- 18. 创建透明度滑块框架
+-- ==================================
+function addon:CreateOpacitySlider()
+    if self.opacitySliderFrame then
+        return self.opacitySliderFrame
+    end
+
+    local f = CreateFrame("Frame", "MythicImmortalOpacitySlider", UIParent, "BackdropTemplate")
+    f:SetSize(200, 50)
+    f:SetPoint("CENTER", UIParent, "CENTER", -276, 100)
+    f:SetFrameStrata("HIGH")
+    f:Hide()
+
+    f:SetBackdrop({
+        bgFile = "Interface/Tooltips/UI-Tooltip-Background",
+        edgeFile = "Interface/Tooltips/UI-Tooltip-Border",
+        tile = true,
+        tileSize = 16,
+        edgeSize = 16,
+        insets = { left = 4, right = 4, top = 4, bottom = 4 }
+    })
+    f:SetBackdropColor(0.05, 0.05, 0.05, 0.95)
+    f:SetBackdropBorderColor(0.4, 0.4, 0.4, 1)
+
+    f.title = f:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    f.title:SetPoint("TOP", f, "TOP", 0, -5)
+    f.title:SetText(L["OPACITY_SLIDER_TITLE"] or "Window Opacity")
+    f.title:SetTextColor(1, 0.82, 0)
+
+    local slider = CreateFrame("Slider", "MythicImmortalOpacitySliderControl", f, "OptionsSliderTemplate")
+    slider:SetPoint("TOP", f.title, "BOTTOM", 0, -10)
+    slider:SetWidth(160)
+    slider:SetHeight(15)
+    slider:SetMinMaxValues(0.1, 1.0)
+    slider:SetValueStep(0.05)
+    
+    -- 设置标签
+    _G[slider:GetName().."Low"]:SetText("10%")
+    _G[slider:GetName().."High"]:SetText("100%")
+    
+    local valueText = f:CreateFontString(nil, "ARTWORK", "GameFontHighlightSmall")
+    valueText:SetPoint("TOP", slider, "BOTTOM", 0, -5)
+    f.valueText = valueText
+
+    slider:SetScript("OnValueChanged", function(self, value)
+        value = tonumber(string.format("%.2f", value)) -- 保留两位小数
+        valueText:SetText(string.format("%d%%", math.floor(value * 100)))
+        
+        -- 更新主窗口透明度
+        if addon.displayFrame then
+            local backdropColor = {0.05, 0.05, 0.05, value * 0.95} -- 保持原有的颜色，只改变alpha值
+            addon.displayFrame:SetBackdropColor(unpack(backdropColor))
+        end
+        
+        -- 更新筛选窗口透明度
+        if addon.filterFrame then
+            addon.filterFrame:SetBackdropColor(0.05, 0.05, 0.05, value * 0.95)
+        end
+        
+        -- 更新透明度滑块自身透明度
+        f:SetBackdropColor(0.05, 0.05, 0.05, value * 0.95)
+        
+        -- 保存设置到数据库
+        if addon.db then
+            addon.db.opacity = value
+        end
+    end)
+
+    -- 关闭按钮
+    f.closeBtn = CreateFrame("Button", nil, f, "UIPanelCloseButtonNoScripts")
+    f.closeBtn:SetSize(16, 16)
+    f.closeBtn:SetPoint("TOPRIGHT", f, "TOPRIGHT", -3, -3)
+    f.closeBtn:SetScript("OnClick", function(self)
+        f:Hide()
+    end)
+
+    self.opacitySliderFrame = f
+    self.opacitySlider = slider
+    
+    return f
+end
+
+-- ==================================
+-- 19. 设置窗口透明度
+-- ==================================
+function addon:SetWindowOpacity(opacity)
+    if not opacity then
+        opacity = self.db and self.db.opacity or 1.0
+    end
+    
+    if self.displayFrame then
+        self.displayFrame:SetBackdropColor(0.05, 0.05, 0.05, opacity * 0.95)
+    end
+    
+    if self.filterFrame then
+        self.filterFrame:SetBackdropColor(0.05, 0.05, 0.05, opacity * 0.95)
+    end
+    
+    if self.opacitySlider then
+        self.opacitySlider:SetValue(opacity)
+        self.opacitySliderFrame.valueText:SetText(string.format("%d%%", math.floor(opacity * 100)))
+    end
+end
+
+-- ==================================
+-- 20. 创建筛选框架
 -- ==================================
 function addon:CreateFilterFrame(parentFrame)
     if self.filterFrame then
@@ -477,7 +516,7 @@ function addon:CreateFilterFrame(parentFrame)
 end
 
 -- ==================================
--- 19. 创建显示框架（增加滚动条功能）
+-- 21. 创建显示框架（增加滚动条功能）
 -- ==================================
 function addon:CreateDisplayFrame()
     if self.displayFrame then 
@@ -497,7 +536,7 @@ function addon:CreateDisplayFrame()
         edgeSize = 16,
         insets = { left = 4, right = 4, top = 4, bottom = 4 }
     })
-    f:SetBackdropColor(0.05, 0.05, 0.05, 0.95)
+    f:SetBackdropColor(0.05, 0.05, 0.05, 0.95) -- 默认透明度
     f:SetBackdropBorderColor(0.4, 0.4, 0.4, 1)
     f:Hide()
 
@@ -532,10 +571,10 @@ function addon:CreateDisplayFrame()
     f.fixedText:SetJustifyV("TOP")
     f.fixedText:SetWidth(300)
 
-    -- 底部按钮区域
+    -- 底部按钮区域 - 重新布局按钮位置
     f.printBtn = CreateFrame("Button", nil, f, "UIPanelButtonTemplate")
     f.printBtn:SetSize(50, 22)
-    f.printBtn:SetPoint("BOTTOMLEFT", f, "BOTTOM", -100, 15)
+    f.printBtn:SetPoint("BOTTOMLEFT", f, "BOTTOM", -105, 15)
     f.printBtn:SetText(L["UI_BUTTON_VIEW"]) -- 使用本地化字符串
     f.printBtn:SetNormalFontObject("GameFontNormalSmall")
     f.printBtn:SetScript("OnClick", function(self)
@@ -544,7 +583,7 @@ function addon:CreateDisplayFrame()
 
     f.sendKeystoneBtn = CreateFrame("Button", nil, f, "UIPanelButtonTemplate")
     f.sendKeystoneBtn:SetSize(80, 22)
-    f.sendKeystoneBtn:SetPoint("BOTTOMLEFT", f, "BOTTOM", 40, 15) -- 向右移动，避免与筛选按钮重叠
+    f.sendKeystoneBtn:SetPoint("BOTTOMLEFT", f, "BOTTOM", 40, 15) 
     f.sendKeystoneBtn:SetText(L["UI_BUTTON_SEND"]) -- 使用本地化字符串
     f.sendKeystoneBtn:SetNormalFontObject("GameFontNormalSmall")
     f.sendKeystoneBtn:SetScript("OnClick", function(self)
@@ -568,6 +607,40 @@ function addon:CreateDisplayFrame()
         addon:UpdateFilterCheckboxes() -- 显示时同步UI状态
     end)
 
+-- 添加透明度调整按钮 - 使用内置齿轮图标
+f.opacityBtn = CreateFrame("Button", nil, f, "UIPanelButtonTemplate")
+f.opacityBtn:SetSize(20,20)  -- 减小按钮大小适应图标
+f.opacityBtn:SetPoint("BOTTOMLEFT", f, "BOTTOMLEFT", 45, 16)
+f.opacityBtn:SetText("") -- 清空文字
+
+-- 使用魔兽世界内置的齿轮图标纹理
+local gearTexture = f.opacityBtn:CreateTexture(nil, "ARTWORK")
+gearTexture:SetTexture("Interface\\LFGFrame\\UI-LFG-PORTRAIT") 
+gearTexture:SetAllPoints(f.opacityBtn)
+gearTexture:SetTexCoord(0.2, 0.8, 0.2, 0.8)  -- 调整图标的可见区域，裁剪掉边缘空白
+
+-- 为按钮添加悬停效果
+f.opacityBtn:SetScript("OnEnter", function(self)
+    gearTexture:SetVertexColor(1.2, 1.2, 0.8)  -- 悬停时变亮为金黄色
+end)
+
+f.opacityBtn:SetScript("OnLeave", function(self)
+    gearTexture:SetVertexColor(1, 1, 1)  -- 恢复正常颜色
+end)
+
+f.opacityBtn:SetNormalFontObject("GameFontNormalSmall")
+f.opacityBtn:SetScript("OnClick", function(self)
+    if not addon.opacitySliderFrame then
+        addon:CreateOpacitySlider()
+    end
+    addon.opacitySliderFrame:Show()
+    -- 设置滑块的当前值
+    if addon.opacitySlider then
+        addon.opacitySlider:SetValue(addon.db.opacity or 0.95)
+        addon.opacitySliderFrame.valueText:SetText(string.format("%d%%", math.floor((addon.db.opacity or 0.95) * 100)))
+    end
+end)
+
     f.closeBtn = CreateFrame("Button", nil, f, "UIPanelCloseButtonNoScripts")
     f.closeBtn:SetSize(24.5, 24.5)
     f.closeBtn:SetPoint("TOPRIGHT", f, "TOPRIGHT", 0, 0)
@@ -585,6 +658,7 @@ function addon:CreateDisplayFrame()
         PVEFrame:HookScript("OnShow", function()
             if addon.displayFrame and addon.db then
                 addon.displayFrame:Show()
+                addon:SetWindowOpacity(addon.db.opacity) -- 应用透明度设置
                 addon:UpdateDisplay()
             end
         end)
@@ -603,7 +677,7 @@ function addon:CreateDisplayFrame()
 end
 
 -- ==================================
--- 20. 更新显示（修改以支持滚动条）
+-- 22. 更新显示（修改以支持滚动条）
 -- ==================================
 function addon:UpdateDisplay()
     if not self.displayFrame then self:CreateDisplayFrame() end
@@ -661,10 +735,13 @@ function addon:UpdateDisplay()
     -- 设置固定文本（总次数和联系方式）
     local fixedTextContent = string.format("|cffaaaaaa----------------|r\n|cffffff00" .. L["UI_TOTAL_RUNS"] .. ": %d|r\n\n\n|cff888888" .. L["BUG_REPORT"], totalActualRuns) -- 使用本地化字符串
     f.fixedText:SetText(fixedTextContent)
+    
+    -- 确保透明度设置应用
+    self:SetWindowOpacity(self.db.opacity)
 end
 
 -- ==================================
--- 21. 显示窗口
+-- 23. 显示窗口
 -- ==================================
 function addon:ShowDisplayFrame()
     if not self.displayFrame then
@@ -678,7 +755,7 @@ function addon:ShowDisplayFrame()
 end
 
 -- ==================================
--- 22. 事件处理
+-- 24. 事件处理
 -- ==================================
 local eventFrame = CreateFrame("Frame")
 eventFrame:RegisterEvent("ADDON_LOADED")
@@ -692,6 +769,12 @@ eventFrame:SetScript("OnEvent", function(self, event, arg1)
     if event == "ADDON_LOADED" and arg1 == addonName then
         addon:InitializeDB()
         addon:CreateDisplayFrame()
+        addon:CreateOpacitySlider() -- 创建透明度滑块框架
+        
+        -- 应用保存的透明度设置
+        if addon.db.opacity then
+            addon:SetWindowOpacity(addon.db.opacity)
+        end
         
     elseif event == "PLAYER_ENTERING_WORLD" then
         if not mapInfoRequested then
@@ -726,7 +809,7 @@ eventFrame:SetScript("OnEvent", function(self, event, arg1)
 end)
 
 -- ==================================
--- 23. 命令
+-- 25. 命令
 -- ==================================
 -- 修改点：命令已更改为 /mi 和 /mythicimmortal
 SLASH_MYTHICIMMORTAL1 = "/mi"
@@ -753,6 +836,15 @@ SlashCmdList["MYTHICIMMORTAL"] = function(msg)
         end
         addon.filterFrame:Show()
         addon:UpdateFilterCheckboxes() -- 同步UI状态
+    elseif msg == "opacity" then
+        if not addon.opacitySliderFrame then
+            addon:CreateOpacitySlider()
+        end
+        addon.opacitySliderFrame:Show()
+        if addon.opacitySlider then
+            addon.opacitySlider:SetValue(addon.db.opacity or 0.95)
+            addon.opacitySliderFrame.valueText:SetText(string.format("%d%%", math.floor((addon.db.opacity or 0.95) * 100)))
+        end
     else
         addon:UpdateCurrentCharData(true)
         addon:PrintDebugReport()

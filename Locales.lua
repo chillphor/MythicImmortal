@@ -1,0 +1,87 @@
+-- Locales.lua
+-- 本地化数据文件
+
+local addonName = "MythicImmortal"
+local L = {}
+
+-- 获取当前客户端语言
+local currentLocale = GetLocale()
+
+-- 默认语言包 (简体中文)
+L["INSTANCE_239"] = "执政团之座"
+L["INSTANCE_556"] = "萨隆矿坑"
+L["INSTANCE_161"] = "通天峰"
+L["INSTANCE_402"] = "艾杰斯亚学院"
+L["INSTANCE_557"] = "风行者之塔"
+L["INSTANCE_558"] = "魔导师平台"
+L["INSTANCE_560"] = "迈萨拉洞窟"
+L["INSTANCE_559"] = "节点希纳斯"
+L["NO_KEY"] = "你没有当前的大秘境钥匙！"
+L["NOT_IN_GROUP"] = "你不在小队或团队中，无法发送钥匙信息。"
+L["CURRENT_KEY"] = "当前钥匙"
+L["UNKNOWN_INSTANCE"] = "未知副本"
+L["TIME_COMPLETED"] = "限时"
+L["TIME_FAILED"] = "超时"
+L["DEBUG_TITLE"] = "=== MythicImmortal 调试报告 ==="
+L["DEBUG_CHARACTER"] = "角色"
+L["DEBUG_API"] = "API 实时读取"
+L["DEBUG_DB"] = "数据库 旧值"
+L["DATA_UPDATED"] = "检测到变化！数据已更新。"
+L["DATA_SAME"] = "数据一致，无需更新。"
+L["DEBUG_DETAIL"] = "API 详细记录"
+L["NO_KEY_CURRENT"] = "当前没有钥匙"
+L["UI_TITLE"] = "本周大秘境统计"
+L["UI_BUTTON_VIEW"] = "查看"
+L["UI_BUTTON_SEND"] = "发送钥匙"
+L["UI_TOTAL_RUNS"] = "本周总低保次数"
+L["BUG_REPORT"] = "若发现Bug请联系|cff3FC7EB尽是风流"
+L["FILTER_TITLE"] = "角色筛选"
+L["SELECT_ALL"] = "全选"
+L["CLEAR_SELECTION"] = "清空"
+L["NO_SELECTED_CHARS"] = "没有选中任何角色"
+L["NO_DATA"] = "暂无数据"
+L["FILTER_BUTTON"] = "筛选"
+L["OPACITY_SLIDER_TITLE"] = "窗口透明度"
+L["OPACITY_BUTTON"] = "透明度"
+
+-- 如果是英语环境，则覆盖为英文
+if currentLocale == "enUS" or currentLocale == "enGB" then
+    L["INSTANCE_239"] = "Seat of the Triumvirate"
+    L["INSTANCE_556"] = "Pit of Saron"
+    L["INSTANCE_161"] = "Skyreach"
+    L["INSTANCE_402"] = "Algeth'ar Academy"
+    L["INSTANCE_557"] = "Windrunner Spire"
+    L["INSTANCE_558"] = "Magister's Terrace"
+    L["INSTANCE_560"] = "Maisara Caverns"
+    L["INSTANCE_559"] = "Nexus-Point Xenas"
+    L["NO_KEY"] = "You don't have a Mythic Keystone!"
+    L["NOT_IN_GROUP"] = "You are not in a group or raid."
+    L["CURRENT_KEY"] = "Current Keystone"
+    L["UNKNOWN_INSTANCE"] = "Unknown Dungeon"
+    L["TIME_COMPLETED"] = "Completed"
+    L["TIME_FAILED"] = "Failed"
+    L["DEBUG_TITLE"] = "=== MythicImmortal Debug Report ==="
+    L["DEBUG_CHARACTER"] = "Character"
+    L["DEBUG_API"] = "API Read"
+    L["DEBUG_DB"] = "Database Old Value"
+    L["DATA_UPDATED"] = "Change detected! Data updated."
+    L["DATA_SAME"] = "Data is consistent."
+    L["DEBUG_DETAIL"] = "API Details"
+    L["NO_KEY_CURRENT"] = "No current key"
+    L["UI_TITLE"] = "Weekly M+ Stats"
+    L["UI_BUTTON_VIEW"] = "View"
+    L["UI_BUTTON_SEND"] = "Send Key"
+    L["UI_TOTAL_RUNS"] = "Total Weekly Runs"
+    L["BUG_REPORT"] = "Bug report to |cff3FC7EBJinshifengliu"
+    L["FILTER_TITLE"] = "Character Filter"
+    L["SELECT_ALL"] = "Select All"
+    L["CLEAR_SELECTION"] = "Clear"
+    L["NO_SELECTED_CHARS"] = "No characters selected"
+    L["NO_DATA"] = "No data available"
+    L["FILTER_BUTTON"] = "Filter"
+    L["OPACITY_SLIDER_TITLE"] = "Window Opacity"
+    L["OPACITY_BUTTON"] = "Opacity"
+end
+
+-- 将 L 表赋值给全局变量，方便 core.lua 调用
+_G[addonName .. "_L"] = L
